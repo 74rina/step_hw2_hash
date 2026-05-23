@@ -13,15 +13,14 @@ import random, sys, time
 #
 # 'key': string
 # Return value: a hash value
+
+
 def calculate_hash(key):
     assert type(key) == str
     # Note: This is not a good hash function. Make it better!
-    n = len(key)
-    M = 10 ** 6
     hash = 0
-    for i in range(n):
-        tmp = (ord(key[i]) - 96) * (10 ** (n - 1 - i))
-        hash += tmp % M
+    for c in key:
+        hash += ord(c)
     return hash
 
 
@@ -51,7 +50,9 @@ class HashTable:
     def __init__(self):
         # Set the initial bucket size to 97. A prime number is chosen to reduce
         # hash conflicts.
-        self.bucket_size = 10 ** 6
+        
+        self.bucket_size = 97 # ハッシュテーブルのサイズ
+        self.extend = 2 # check_size == False になったらハッシュテーブルのサイズをextend倍する
         self.buckets = [None] * self.bucket_size
         self.item_count = 0
 
@@ -70,13 +71,18 @@ class HashTable:
         #------------------------#     
          
         key_hash = calculate_hash(key) % self.bucket_size
-        if not self.buckets[key_hash]:
-            self.buckets[key_hash] = value
+        if self.buckets[key_hash]:
+            for i in range(len(self.buckets[key_hash])):
+                if self.buckets[key_hash][i][0] == key:
+                    self.buckets[key_hash][i][1] = value
+                else:
+                    self.buckets[key_hash].append([key, value])
+            return False
+        else:
+            self.buckets[key_hash] = [[key, value]]
             self.item_count += 1
             return True
-        else:
-            self.buckets[key_hash] = value
-            return False
+
         
     # Get an item from the hash table.
     #
@@ -92,8 +98,12 @@ class HashTable:
         
         key_hash = calculate_hash(key) % self.bucket_size
         if self.buckets[key_hash]:
-            return (self.buckets[key_hash], True)
-        else:   
+            print(self.buckets[key_hash])
+            for i in range(len(self.buckets[key_hash])):
+                if self.buckets[key_hash][i][0] == key:
+                    return (self.buckets[key_hash][i][1], True)
+            return (None, False)
+        else:
             return (None, False)
 
     # Delete an item from the hash table.
@@ -126,8 +136,7 @@ class HashTable:
 #
 # Note: Don't change this function.
 def check_size(item_count, bucket_size):
-    pass
-    # assert (bucket_size < 100 or item_count >= bucket_size * 0.3)
+    assert (bucket_size < 100 or item_count >= bucket_size * 0.3)
 
 
 # Test the functional behavior of the hash table.
@@ -135,6 +144,7 @@ def functional_test():
     hash_table = HashTable()
 
     assert hash_table.put("aaa", 1) == True
+
     assert hash_table.get("aaa") == (1, True)
     assert hash_table.size() == 1
 
@@ -173,7 +183,7 @@ def functional_test():
     assert hash_table.size() == 0
 
     assert hash_table.put("abc", 1) == True
-    assert hash_table.put("acb", 2) == True
+    assert hash_table.put("acb", 2) == True #エラー
     assert hash_table.put("bac", 3) == True
     assert hash_table.put("bca", 4) == True
     assert hash_table.put("cab", 5) == True
