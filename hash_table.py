@@ -21,7 +21,7 @@ def calculate_hash(key):
     hash = 0
     base = 31
     mod = 10 ** 9
-    for i, c in enumerate(key):
+    for c in key:
         hash = (hash * base + ord(c)) % mod
     return hash
 
@@ -57,6 +57,23 @@ class HashTable:
         self.extend = 2 # check_size == False になったらハッシュテーブルのサイズをextend倍する
         self.buckets = [None] * self.bucket_size
         self.item_count = 0
+    
+    # rehash when: item_size / all > 0.7
+    def rehash(self, new_backet_size):
+        old_buckets = self.buckets
+        
+        self.bucket_size = new_backet_size
+        self.buckets = [None] * self.bucket_size
+        self.item_count = 0
+        
+        for bucket in old_buckets:
+            if bucket is not None:
+                for key, value in bucket:
+                    key_hash = calculate_hash(key) % self.bucket_size
+                    if self.buckets[key_hash] is None:
+                        self.buckets[key_hash] = []
+                    self.buckets[key_hash].append([key, value])
+                    self.item_count += 1
 
     # Put an item to the hash table. If the key already exists, the
     # corresponding value is updated to a new value.
@@ -70,8 +87,10 @@ class HashTable:
         check_size(self.size(), self.bucket_size)  # Don't remove this code.
         #------------------------#
         # Write your code here!  #
-        #------------------------#     
-         
+        #------------------------#    
+        if self.item_count > self.bucket_size * 0.7:
+            self.rehash(self.bucket_size * 2 + 1)
+        
         key_hash = calculate_hash(key) % self.bucket_size
         
         if self.buckets[key_hash] is None:
@@ -117,6 +136,9 @@ class HashTable:
         #------------------------#
         # Write your code here!  #
         #------------------------#
+        
+        if self.item_count < self.bucket_size * 0.7:
+            self.rehash(self.bucket_size // 2 + 1)
 
         key_hash = calculate_hash(key) % self.bucket_size
         if self.buckets[key_hash]:
