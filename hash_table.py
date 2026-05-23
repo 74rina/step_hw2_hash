@@ -19,8 +19,10 @@ def calculate_hash(key):
     assert type(key) == str
     # Note: This is not a good hash function. Make it better!
     hash = 0
-    for c in key:
-        hash += ord(c)
+    base = 31
+    mod = 10 ** 9
+    for i, c in enumerate(key):
+        hash = (hash * base + ord(c)) % mod
     return hash
 
 
@@ -71,18 +73,18 @@ class HashTable:
         #------------------------#     
          
         key_hash = calculate_hash(key) % self.bucket_size
-        if self.buckets[key_hash]:
-            for i in range(len(self.buckets[key_hash])):
-                if self.buckets[key_hash][i][0] == key:
-                    self.buckets[key_hash][i][1] = value
-                else:
-                    self.buckets[key_hash].append([key, value])
-            return False
-        else:
-            self.buckets[key_hash] = [[key, value]]
-            self.item_count += 1
-            return True
+        
+        if self.buckets[key_hash] is None:
+            self.buckets[key_hash] = []
 
+        for item in self.buckets[key_hash]:
+            if item[0] == key:
+                item[1] = value
+                return False
+            
+        self.buckets[key_hash].append([key, value])
+        self.item_count += 1
+        return True
         
     # Get an item from the hash table.
     #
@@ -98,7 +100,6 @@ class HashTable:
         
         key_hash = calculate_hash(key) % self.bucket_size
         if self.buckets[key_hash]:
-            print(self.buckets[key_hash])
             for i in range(len(self.buckets[key_hash])):
                 if self.buckets[key_hash][i][0] == key:
                     return (self.buckets[key_hash][i][1], True)
@@ -119,11 +120,12 @@ class HashTable:
 
         key_hash = calculate_hash(key) % self.bucket_size
         if self.buckets[key_hash]:
-            self.buckets[key_hash] = None
-            self.item_count -= 1
-            return True
-        else:
-            return False
+            for i in range(len(self.buckets[key_hash])):
+                if self.buckets[key_hash][i][0] == key: 
+                    self.buckets[key_hash].pop(i)
+                    self.item_count -= 1
+                    return True
+        return False
 
     # Return the total number of items in the hash table.
     def size(self):
@@ -145,7 +147,7 @@ def functional_test():
 
     assert hash_table.put("aaa", 1) == True
 
-    assert hash_table.get("aaa") == (1, True)
+    assert hash_table.get("aaa") == (1, True) 
     assert hash_table.size() == 1
 
     assert hash_table.put("bbb", 2) == True
@@ -183,7 +185,7 @@ def functional_test():
     assert hash_table.size() == 0
 
     assert hash_table.put("abc", 1) == True
-    assert hash_table.put("acb", 2) == True #エラー
+    assert hash_table.put("acb", 2) == True
     assert hash_table.put("bac", 3) == True
     assert hash_table.put("bca", 4) == True
     assert hash_table.put("cab", 5) == True
