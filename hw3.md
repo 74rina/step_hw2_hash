@@ -21,7 +21,7 @@ lru: 連結リスト
 
 # Cacheクラス
 
-1. 初期化
+## 1. 初期化
 
 - 訪問履歴の「新→古」順の双方向連結リスト Item()
   - key (urlの文字列)
@@ -38,7 +38,7 @@ lru: 連結リスト
 
 を用意する。
 
-2. Webサイトを訪問した時の処理 visit(url, web_page)
+## 2. Webサイトを訪問した時の処理 visit(url, web_page)
 
 url を hash_table から検索する。O(1)
 
@@ -55,3 +55,21 @@ url を hash_table から検索する。O(1)
 
 1. 連結リストの末尾のノードを削除する O(1)
 2. その末尾ノード（とそのキー）を hash_table から削除する O(1)
+
+## 3. 連結リストの最初にノードを挿入する insert_front(node)
+
+head.next で最初のノード initial_node を取得し、
+
+1. initial_node の prev を更新
+2. 挿入するノード node の next を更新
+3. head.next を挿入するノードにする
+
+## 4. 連結リストのノードを削除する delete(node)
+
+1. 削除するノードの prev, next を取得
+2. prev_node.next および next_node.prev を更新
+3. 削除するノードの prev, next を None にする
+
+## 5. 連結リストの末尾のノードを削除する delete_last()
+
+tail.prev で末尾のノードを取得し、それを delete(node) する。O(1)
