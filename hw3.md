@@ -1,3 +1,5 @@
+# メモ
+
 cache = {url: webページ} 要素数X
 新たなサイトを閲覧したとき、
 bucketsを更新するが、
@@ -17,8 +19,39 @@ lfu: bucketsで登場回数が一番少ないものをreplaceする
 fifo: queue
 lru: 連結リスト
 
-双方向連結リストの
+# Cacheクラス
 
-- 頭にノードを挿入する（webサイトを新たに閲覧したとき）
-- 末尾のノードを削除する（cache_capacityを超過したとき）
-  処理を分離する
+1. 初期化
+
+- 訪問履歴の「新→古」順の双方向連結リスト Item()
+  - key (urlの文字列)
+
+  - value (web_page)
+
+  - next, prev (Item)
+
+- size（連結リストのノード数）
+
+- capacity（連結リストの最大容量）
+
+- urlとリストノードの対応表 hash_table = HashTable()
+
+を用意する。
+
+2. Webサイトを訪問した時の処理 visit(url, web_page)
+
+url を hash_table から検索する。O(1)
+
+- 見つかった場合
+  1. そのノードを連結リストから削除する O(1)
+  2. そのノードを連結リストの最初に挿入する O(1)
+  3. ノードの value を web_page に更新する
+
+- 見つからなかった場合
+  1. 新たなノード（key=url, value=web_page）を作る
+  2. そのノードを連結リストの最初に挿入する O(1)
+
+連結リストの要素数 size が、最大容量 capacity を超えたら、
+
+1. 連結リストの末尾のノードを削除する O(1)
+2. その末尾ノード（とそのキー）を hash_table から削除する O(1)

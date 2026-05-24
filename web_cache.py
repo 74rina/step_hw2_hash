@@ -18,7 +18,6 @@ class Item:
             
 class Cache:
     def __init__(self, capacity):
-        self.capacity = capacity
         self.hash_table = HashTable()
         
         # 双方向連結リストの初期化
@@ -26,6 +25,8 @@ class Cache:
         self.tail = Item(None, None, None, None)       
         self.head.next = self.tail
         self.tail.prev = self.head
+        self.size = 0
+        self.capacity = capacity
     
     # 双方向連結リストの最初にノードを追加する
     def insert_front(self, node):
@@ -50,13 +51,12 @@ class Cache:
     # 連結リストの末尾のノードを削除する
     def delete_last(self):
         last_node = self.tail.prev
-        new_last = last_node.prev
         
-        new_last.next = self.tail
-        self.tail.prev = new_last
+        self.delete(last_node)
         
         return last_node
         
+    # urlのwebページを閲覧したときの処理
     def visit(self, url, web_page):
         node, found = self.hash_table.get(url)
         
@@ -65,6 +65,7 @@ class Cache:
             node.value = web_page
             self.delete(node)
             self.insert_front(node)
+            self.size += 1
             
         else:
             new_node = Item(url, web_page, None, None)
@@ -73,9 +74,10 @@ class Cache:
             
             self.hash_table.put(new_node.key, new_node)
             
-        if self.hash_table.size() > self.capacity:
+        if self.size > self.capacity:
             last_node = self.delete_last()
-            self.hash_table.delete(last_node.key)  
+            self.hash_table.delete(last_node.key)
+            self.size -= 1
 
 def main():
     cache = Cache(cache_capacity)
