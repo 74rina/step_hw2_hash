@@ -26,38 +26,56 @@ class Cache:
         self.tail = Item(None, None, None, None)       
         self.head.next = self.tail
         self.tail.prev = self.head
+    
+    # 双方向連結リストの最初にノードを追加する
+    def insert_front(self, node):
+        initial_node = self.head.next # 現在の最初ノードを退避
+        self.head.next = node
+        node.prev = self.head
+        node.next = initial_node
+        initial_node.prev = node
+    
+    # 連結リストのノードを削除する
+    def delete(self, node):
+        
+        prev_node = node.prev
+        next_node = node.next
+        
+        prev_node.next = next_node
+        next_node.prev = prev_node
+        
+        node.prev = None
+        node.next = None
+    
+    # 連結リストの末尾のノードを削除する
+    def delete_last(self):
+        last_node = self.tail.prev
+        new_last = last_node.prev
+        
+        new_last.next = self.tail
+        self.tail.prev = new_last
+        
+        return last_node
         
     def visit(self, url, web_page):
         node, found = self.hash_table.get(url)
         
         if found:
             assert type(node) == Item
-            
-            initial_node = self.head.next # 現在の最初ノードを退避
-            self.head.next = node
-            node.prev = self.head
-            node.next = initial_node
-            initial_node.prev = node
-
-            if self.hash_table.size() > self.capacity:  
-                self.hash_table.delete(self.tail.prev.key)
-                
-                last_node = self.tail.prev # 現在の末尾ノードを記憶
-                last_node.prev.next = self.tail
-                self.tail.prev = last_node
+            node.value = web_page
+            self.delete(node)
+            self.insert_front(node)
             
         else:
             new_node = Item(url, web_page, None, None)
             
-            initial_node = self.head.next # 現在の最初ノードを退避
-            self.head.next = new_node
-            new_node.prev = self.head
-            new_node.next = initial_node
-            initial_node.prev = new_node
+            self.insert_front(new_node)
             
             self.hash_table.put(new_node.key, new_node)
-            if self.hash_table.size() > self.capacity:
-                self.hash_table.delete(self.tail.prev.key)
+            
+        if self.hash_table.size() > self.capacity:
+            last_node = self.delete_last()
+            self.hash_table.delete(last_node.key)  
 
 def main():
     cache = Cache(cache_capacity)
