@@ -56,9 +56,11 @@ class HashTable:
         self.bucket_size = 97 # ハッシュテーブルのサイズ
         self.buckets = [None] * self.bucket_size
         self.item_count = 0
-    
+        
+        
     # O(item_size)
     def rehash(self, new_bucket_size):
+        
         old_buckets = self.buckets
         
         self.bucket_size = new_bucket_size
@@ -66,13 +68,20 @@ class HashTable:
         self.item_count = 0
         
         for bucket in old_buckets:
-            if bucket is not None:
-                for key, value in bucket:
-                    key_hash = calculate_hash(key) % self.bucket_size
-                    if self.buckets[key_hash] is None:
-                        self.buckets[key_hash] = []
-                    self.buckets[key_hash].append([key, value])
-                    self.item_count += 1
+            cur_node = bucket
+            while cur_node:
+                self.put_for_rehash(cur_node.key, cur_node.value)
+                cur_node = cur_node.next
+    
+    
+    # rehash 用の put
+    def put_for_rehash(self, key, value):
+        key_hash = calculate_hash(key) % self.bucket_size
+        
+        new_node = Item(key, value, self.buckets[key_hash])
+        self.buckets[key_hash] = new_node
+        self.item_count += 1
+
 
     # Put an item to the hash table. If the key already exists, the
     # corresponding value is updated to a new value.
@@ -87,25 +96,33 @@ class HashTable:
         #------------------------#
         # Write your code here!  #
         #------------------------#    
+         
+        key_hash = calculate_hash(key) % self.bucket_size
+            
+        # update
+        cur_node = self.buckets[key_hash]
+        while cur_node:
+            if cur_node.key == key:
+                cur_node.value = value
+                return False
+            cur_node = cur_node.next
+        
+        # リストの最初に挿入
+        new_node = Item(key, value, self.buckets[key_hash])
+        self.buckets[key_hash] = new_node
+    
+        self.item_count += 1
         
         # rehash when: item_size / all > 0.7
         # O(item_size)
         if self.item_count > self.bucket_size * 0.7:
             self.rehash(self.bucket_size * 2 + 1)
         
-        key_hash = calculate_hash(key) % self.bucket_size
-        
-        if self.buckets[key_hash] is None:
-            self.buckets[key_hash] = []
-
-        for item in self.buckets[key_hash]:
-            if item[0] == key:
-                item[1] = value
-                return False
-            
-        self.buckets[key_hash].append([key, value])
-        self.item_count += 1
         return True
+    
+    # vectorを使うと、内部でrevectorが起こるので最悪O(n)、平均はO(1)
+    # 連結リストを使った方が良い
+        
         
     # Get an item from the hash table.
     #
@@ -120,13 +137,16 @@ class HashTable:
         #------------------------#
         
         key_hash = calculate_hash(key) % self.bucket_size
-        if self.buckets[key_hash]:
-            for i in range(len(self.buckets[key_hash])):
-                if self.buckets[key_hash][i][0] == key:
-                    return (self.buckets[key_hash][i][1], True)
-            return (None, False)
-        else:
-            return (None, False)
+        
+        cur_node = self.buckets[key_hash] 
+        
+        while cur_node:
+            if cur_node.key == key:
+                return (cur_node.value, True)
+            cur_node = cur_node.next
+        
+        return (None, False)
+
 
     # Delete an item from the hash table.
     #
@@ -139,18 +159,30 @@ class HashTable:
         # Write your code here!  #
         #------------------------#
         
-        # rehash when: item_size / all < 0.7
-        # O(item_size)
-        if self.item_count < self.bucket_size * 0.7:
-            self.rehash(self.bucket_size // 2 + 1)
-
         key_hash = calculate_hash(key) % self.bucket_size
-        if self.buckets[key_hash]:
-            for i in range(len(self.buckets[key_hash])):
-                if self.buckets[key_hash][i][0] == key: 
-                    self.buckets[key_hash].pop(i)
-                    self.item_count -= 1
-                    return True
+            
+        cur_node = self.buckets[key_hash]
+        prev_node = None
+        
+        while cur_node:
+            if cur_node.key == key:
+                if prev_node is None:
+                    self.buckets[key_hash] = cur_node.next # 削除対象が先頭の場合
+                else:
+                    prev_node.next = cur_node.next
+                    
+                self.item_count -= 1
+                
+                # rehash when: item_size / all < 0.3
+                # O(item_size)
+                if self.bucket_size >= 100 and self.item_count < self.bucket_size * 0.3:
+                    self.rehash(max(97, self.bucket_size // 2 + 1))
+                
+                return True
+
+            prev_node = cur_node
+            cur_node = cur_node.next
+        
         return False
 
     # Return the total number of items in the hash table.

@@ -25,7 +25,6 @@ class Cache:
         self.tail = Item(None, None, None, None)       
         self.head.next = self.tail
         self.tail.prev = self.head
-        self.size = 0
         self.capacity = capacity
     
     # 双方向連結リストの最初にノードを追加する
@@ -63,9 +62,11 @@ class Cache:
         if found:
             assert type(node) == Item
             node.value = web_page
+            
+            # 一つにまとめる
             self.delete(node)
             self.insert_front(node)
-            self.size += 1
+            
             
         else:
             new_node = Item(url, web_page, None, None)
@@ -74,10 +75,9 @@ class Cache:
             
             self.hash_table.put(new_node.key, new_node)
             
-        if self.size > self.capacity:
-            last_node = self.delete_last()
-            self.hash_table.delete(last_node.key)
-            self.size -= 1
+            if self.hash_table.size() > self.capacity:
+                last_node = self.delete_last()
+                self.hash_table.delete(last_node.key)
 
 def main():
     cache = Cache(cache_capacity)
