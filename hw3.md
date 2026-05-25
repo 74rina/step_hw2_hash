@@ -73,3 +73,69 @@ head.next で最初のノード initial_node を取得し、
 ## 5. 連結リストの末尾のノードを削除する delete_last()
 
 tail.prev で末尾のノードを取得し、それを delete(node) する。O(1)
+
+# HashTableクラス
+
+hw1 で実装。O(n) は O(item_count) のこと。
+
+## 1. 追加 put(key, value)
+
+- item_count がテーブルサイズの7割を占めたら rehash（ハッシュテーブルを拡大）する。
+
+1. key のハッシュ値 hash を計算する。
+
+2. 衝突しない場合は bucket に空リストを作成する。
+
+3. bucket[hash] に同じ value が存在したら False。
+
+4. bucket[hash] に [key, value] を append する。
+
+5. item_count をインクリメントする。
+
+bucket[hash] を全探索するので、基本はO(1)、最悪の場合O(n)。
+
+最初に rehash を行う場合は O(n)。
+
+## 2. 検索 get(key)
+
+1. key のハッシュ値 hash を計算する。
+
+2. bucket[hash] で全探索する。
+
+随時 rahash して bucket[hash] の要素数を少なく保つため、基本は O(1)、最悪ケースは O(n)。
+
+## 3. 削除 delete(key)
+
+- item_count がテーブルサイズの7割を切ったら rehash（ハッシュテーブルを縮小）する。
+
+1. key のハッシュ値 hash を計算する。
+
+2. bucket[hash] を全探索して、keyが一致したらそれを pop する。
+
+3. item_count をデクリメントする。
+
+bucket[hash] を全探索するので、基本はO(1)、最悪の場合O(n)。
+
+最初に rehash を行う場合は O(n)。
+
+## 4. ハッシュ値の計算 calculate_hash()
+
+base = 31, mod = 10^9, 各アルファベットはASCII変換して、
+
+abc の場合：
+
+hash = 97 _ 31^3 + 98 _ 31^2 + 99 \* 31^1
+
+と計算する。key長が20以下であるため、O(1)。
+
+## 5. ハッシュテーブルの拡大・縮小 rehash(new_bucket_size)
+
+1.  現在のハッシュテーブルを old_buckets に退避させておく。
+
+2.  サイズ new_bucket_size の新規リスト buckets を作成する。
+
+3.  old_buckets の各bucketのkeyについて、mod を new_bucket_size として、ハッシュ値を計算し直す。
+
+4.  buckets にマッピングする。
+
+ハッシュテーブルの中身全てを再マッピングするので、O(n)。

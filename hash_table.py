@@ -14,7 +14,7 @@ import random, sys, time
 # 'key': string
 # Return value: a hash value
 
-
+# O(key長) → O(1)
 def calculate_hash(key):
     assert type(key) == str
     # Note: This is not a good hash function. Make it better!
@@ -54,15 +54,14 @@ class HashTable:
         # hash conflicts.
         
         self.bucket_size = 97 # ハッシュテーブルのサイズ
-        self.extend = 2 # check_size == False になったらハッシュテーブルのサイズをextend倍する
         self.buckets = [None] * self.bucket_size
         self.item_count = 0
     
-    # rehash when: item_size / all > 0.7
-    def rehash(self, new_backet_size):
+    # O(item_size)
+    def rehash(self, new_bucket_size):
         old_buckets = self.buckets
         
-        self.bucket_size = new_backet_size
+        self.bucket_size = new_bucket_size
         self.buckets = [None] * self.bucket_size
         self.item_count = 0
         
@@ -88,6 +87,9 @@ class HashTable:
         #------------------------#
         # Write your code here!  #
         #------------------------#    
+        
+        # rehash when: item_size / all > 0.7
+        # O(item_size)
         if self.item_count > self.bucket_size * 0.7:
             self.rehash(self.bucket_size * 2 + 1)
         
@@ -137,6 +139,8 @@ class HashTable:
         # Write your code here!  #
         #------------------------#
         
+        # rehash when: item_size / all < 0.7
+        # O(item_size)
         if self.item_count < self.bucket_size * 0.7:
             self.rehash(self.bucket_size // 2 + 1)
 
