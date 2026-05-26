@@ -1,6 +1,4 @@
 import sys
-import random
-import bisect
 from hash_table import HashTable # Use the hash table you implemented in Homework #2
 
 # Implement a data structure that stores the most recently accessed N pages.
