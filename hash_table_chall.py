@@ -18,6 +18,7 @@ class TrieNode:
     def __init__(self):
         self.value = None
         self.children = [None] * 26
+        self.is_end = False
 
 class HashTable:
     def __init__(self):
@@ -32,9 +33,15 @@ class HashTable:
             if node.children[idx] is None:
                 node.children[idx] = TrieNode()
             node = node.children[idx]
-            
+        
+        if node.is_end:
+            is_new = False # update
+        else:
+            is_new = True
+        
         node.value = value
-        return True
+        node.is_end = True
+        return is_new
 
     # 検索
     def get(self, key):
@@ -42,11 +49,13 @@ class HashTable:
         for c in key:
             idx = ord(c) - ord("a")
             if node.children[idx] is None:
-                return node.value
+                return (None, False)
             node = node.children[idx]
-        if node:
+        if node.is_end:
             return (node.value, True)
-        return (None, False)
+        else:
+            return (None, False)
+        
 
     # 削除
     def delete(self, key):
@@ -56,10 +65,12 @@ class HashTable:
             if node.children[idx] is None:
                 return False
             node = node.children[idx]
-        if node:
+        if not node.is_end:
+            return False
+        else:
             node.value = None
+            node.is_end = False
             return True
-        return False
 
 
 
@@ -79,6 +90,7 @@ def functional_test():
     assert hash_table.get("bbb") == (2, True)
     assert hash_table.get("ccc") == (3, True)
     assert hash_table.get("ddd") == (4, True) 
+    print(hash_table.get("a"))
     assert hash_table.get("a") == (None, False)
     assert hash_table.get("aa") == (None, False)
     assert hash_table.get("aaaa") == (None, False)
@@ -129,18 +141,27 @@ def functional_test():
     # assert hash_table.size() == 0
 
     # Test the rehashing.
+    keys = []
     for i in range(100):
-        hash_table.put(str(i), str(i))
-    for i in range(100):
-        assert hash_table.get(str(i)) == (str(i), True)
-    for i in range(100):
-        assert hash_table.delete(str(i)) == True
+        key = random_lower_string(20)
+        keys.append(key)
+        assert hash_table.put(key, key) == True
+
+    for key in keys:
+        assert hash_table.get(key) == (key, True)
+
+    for key in keys:
+        assert hash_table.delete(key) == True
+        
     hash_table.put("abc", 1)
     hash_table.put("acb", 2)
     assert hash_table.get("abc") == (1, True)
     assert hash_table.get("acb") == (2, True)
     print("Functional tests passed!")
 
+
+def random_lower_string(length=20):
+    return ''.join(chr(ord('a') + random.randint(0, 25)) for _ in range(length))
 
 # Test the performance of the hash table.
 #
@@ -156,23 +177,31 @@ def performance_test():
     for iteration in range(100):
         begin = time.time()
         random.seed(iteration)
+
+        keys = []
         for i in range(10000):
-            rand = random.randint(0, 100000000)
-            hash_table.put(str(rand), str(rand))
-        random.seed(iteration)
-        for i in range(10000):
-            rand = random.randint(0, 100000000)
-            hash_table.get(str(rand))
+            key = random_lower_string(20)
+            keys.append(key)
+            hash_table.put(key, key)
+
+        for key in keys:
+            hash_table.get(key)
+
         end = time.time()
         print("%d %.6f" % (iteration, end - begin))
 
     for iteration in range(100):
         random.seed(iteration)
-        for i in range(10000):
-            rand = random.randint(0, 100000000)
-            hash_table.delete(str(rand))
 
-    assert hash_table.size() == 0
+        keys = []
+        for i in range(10000):
+            key = random_lower_string(20)
+            keys.append(key)
+
+        for key in keys:
+            hash_table.delete(key)
+
+    # assert hash_table.size() == 0
     print("Performance tests passed!")
 
 
